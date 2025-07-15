@@ -80,6 +80,22 @@ class MSPAAPI:
         
         return headers
 
+    def _build_login_headers(self):
+        """Build headers for initial login (without signature)."""
+        nonce = self._generate_nonce()
+        timestamp = self._generate_timestamp()
+        
+        headers = {
+            "push_type": "Android",
+            "appid": self._appid,
+            "nonce": nonce,
+            "ts": timestamp,
+            "lan_code": "en",
+            "Content-Type": "application/json"
+        }
+        
+        return headers
+
     async def login(self):
         """Authenticate with username/password to get access token."""
         if not self.username or not self.password:
@@ -104,7 +120,8 @@ class MSPAAPI:
         
         try:
             url = f"{self.base_url.rstrip('/')}/enduser/get_token/"
-            headers = self._build_headers(login_payload)
+            # Build headers WITHOUT signature for initial login
+            headers = self._build_login_headers()
             
             resp = await self._session.post(
                 url,
@@ -123,15 +140,7 @@ class MSPAAPI:
                     self._access_token = token
                     return True
             else:
-                # If signature verification fails, provide helpful error
-                if data.get("code") == 403 and "signature" in data.get("message", "").lower():
-                    raise MSPAAPIException(
-                        "Authentication failed: Signature verification failed. "
-                        "The MSpa API requires a secret key that's embedded in the mobile app. "
-                        "Consider using a manual token or extracting the key from the APK."
-                    )
-                else:
-                    raise MSPAAPIException(f"Login failed: {data.get('message', 'Unknown error')}")
+                raise MSPAAPIException(f"Login failed: {data.get('message', 'Unknown error')}")
                     
         except MSPAAPIException:
             raise  # Re-raise our custom exceptions
@@ -219,9 +228,26 @@ class MSPAAPI:
 
     async def get_user_devices(self):
         """Get list of devices associated with the user account."""
+        if not self._access_token:
+            raise MSPAAPIException("No access token available. Please login first.")
+        
         try:
-            response = await self._call("enduser/devices/")
-            devices = response.get("data", {}).get("list", [])
+            # Use GET request with token authentication and signature
+            url = f"{self.base_url.rstrip('/')}/enduser/devices/"
+            headers = self._build_headers()  # This will include token and signature
+            
+            resp = await self._session.get(
+                url,
+                headers=headers,
+                timeout=ClientTimeout(self._timeout),
+            )
+            
+            data = await resp.json()
+            
+            if data.get("code") != 0:
+                raise MSPAAPIException(f"Failed to get devices: {data.get('message', 'Unknown error')}")
+            
+            devices = data.get("data", {}).get("list", [])
             
             # Extract relevant device information
             device_list = []
@@ -239,7 +265,9 @@ class MSPAAPI:
                 device_list.append(device_info)
             
             return device_list
-        except MSPAAPIException as e:
+        except MSPAAPIException:
+            raise
+        except Exception as e:
             raise MSPAAPIException(f"Failed to get user devices: {str(e)}")
 
     async def test_connection(self):
