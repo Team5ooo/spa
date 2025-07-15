@@ -2,19 +2,20 @@ import asyncio
 import logging
 from datetime import timedelta
 import json
+from typing import TYPE_CHECKING
 
 import aiohttp
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import (
-    DataUpdateCoordinator,
-    CoordinatorEntity,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, API_BASE_URL
 from .mspaapi import MSPAAPI, MSPAAPIException
+
+if TYPE_CHECKING:
+    from . import MSPADataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,24 +28,10 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the MSpa switch platform."""
-    username = config_entry.data["username"]
-    password = config_entry.data["password"]
-    device_id = config_entry.data["device_id"]
-    product_id = config_entry.data["product_id"]
-    access_token = config_entry.data.get("access_token")
-    
-    api = MSPAAPI(
-        base_url=API_BASE_URL,
-        device_id=device_id,
-        product_id=product_id,
-        username=username,
-        password=password,
-        access_token=access_token
-    )
-
-    # Create a coordinator to manage data updates
-    coordinator = MSPADataUpdateCoordinator(hass, api)
-    await coordinator.async_config_entry_first_refresh()
+    # Get shared coordinator and API from hass.data
+    data = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = data["coordinator"]
+    api = data["api"]
 
     # Define the switches you want to create
     switches = [
@@ -66,36 +53,13 @@ async def async_setup_entry(
 
 
 
-class MSPADataUpdateCoordinator(DataUpdateCoordinator):
-    """Coordinator to manage fetching data from the API."""
-
-    def __init__(self, hass: HomeAssistant, api: MSPAAPI):
-        """Initialize the data update coordinator."""
-        self._api = api
-        super().__init__(
-            hass,
-            _LOGGER,
-            name="MSPADataUpdateCoordinator",
-            update_interval=SCAN_INTERVAL,
-        )
-
-    async def _async_update_data(self):
-        """Fetch data from the API at regular intervals."""
-        try:
-            data = await self._api.get_device_status()
-            _LOGGER.debug("Fetched MSpa data: %s", data)
-            return data
-        except MSPAAPIException as e:
-            _LOGGER.error("Error fetching MSpa data: %s", e)
-            return self.data  # Return existing data if fetch fails
-
 
 
 
 class MSpASwitch(CoordinatorEntity, SwitchEntity):
     """Representation of a MSpa switch."""
 
-    def __init__(self, coordinator: MSPADataUpdateCoordinator, api: MSPAAPI, data_key: str, name: str):
+    def __init__(self, coordinator: "MSPADataUpdateCoordinator", api: MSPAAPI, data_key: str, name: str):
         """Initialize the MSpa switch."""
         super().__init__(coordinator)
         self._api = api
@@ -166,7 +130,7 @@ class MSpASwitch(CoordinatorEntity, SwitchEntity):
 class MSpaTemperatureUnitSwitch(CoordinatorEntity, SwitchEntity):
     """Switch to toggle between Celsius and Fahrenheit."""
 
-    def __init__(self, coordinator: MSPADataUpdateCoordinator, api: MSPAAPI):
+    def __init__(self, coordinator: "MSPADataUpdateCoordinator", api: MSPAAPI):
         """Initialize the temperature unit switch."""
         super().__init__(coordinator)
         self._api = api
@@ -220,7 +184,7 @@ class MSpaTemperatureUnitSwitch(CoordinatorEntity, SwitchEntity):
 class MSpABubbleLevelSelect(CoordinatorEntity, SwitchEntity):
     """Switch to cycle through bubble levels (1-3)."""
 
-    def __init__(self, coordinator: MSPADataUpdateCoordinator, api: MSPAAPI):
+    def __init__(self, coordinator: "MSPADataUpdateCoordinator", api: MSPAAPI):
         """Initialize the bubble level selector."""
         super().__init__(coordinator)
         self._api = api
