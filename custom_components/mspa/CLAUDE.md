@@ -34,7 +34,7 @@ The integration follows Home Assistant's standard structure:
 - **State Management**: Local state updates after successful API commands to improve responsiveness
 
 ### Entity Structure
-- Temperature sensors apply 0.5x correction factor to raw API values
+- Temperature sensors use raw API values (already in correct Celsius) with automatic unit conversion
 - Bubble level mapped from numeric (0-3) to descriptive states (Off/Low/Medium/High)
 - Switch entities include automatic dependency handling
 
