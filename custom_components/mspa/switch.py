@@ -106,8 +106,8 @@ class MSpASwitch(CoordinatorEntity, SwitchEntity):
             _LOGGER.debug(f"MSpa command response: {response}")
 
             if response.get("code") == 0 and response.get("message") == "SUCCESS":
-                # Small delay to ensure API state is updated before refresh
-                await asyncio.sleep(0.5)
+                # Delay to ensure API state is updated before refresh
+                await asyncio.sleep(2.0)
                 await self.coordinator.async_request_refresh()
                 _LOGGER.debug("Triggered immediate refresh after successful turn_on command.")
             else:
@@ -130,8 +130,8 @@ class MSpASwitch(CoordinatorEntity, SwitchEntity):
             response = await self._api.send_device_command(desired_state)
             _LOGGER.debug(f"MSpa command response: {response}")
             if response.get("code") == 0 and response.get("message") == "SUCCESS":
-                # Small delay to ensure API state is updated before refresh
-                await asyncio.sleep(0.5)
+                # Delay to ensure API state is updated before refresh
+                await asyncio.sleep(2.0)
                 await self.coordinator.async_request_refresh()
                 _LOGGER.debug("Triggered immediate refresh after successful turn_off command.")
             else:
@@ -176,8 +176,8 @@ class MSpaTemperatureUnitSwitch(CoordinatorEntity, SwitchEntity):
             _LOGGER.debug(f"MSpa temperature unit command response: {response}")
 
             if response.get("code") == 0 and response.get("message") == "SUCCESS":
-                # Small delay to ensure API state is updated before refresh
-                await asyncio.sleep(0.5)
+                # Delay to ensure API state is updated before refresh
+                await asyncio.sleep(2.0)
                 await self.coordinator.async_request_refresh()
                 _LOGGER.debug("Set temperature unit to Fahrenheit.")
             else:
@@ -194,8 +194,8 @@ class MSpaTemperatureUnitSwitch(CoordinatorEntity, SwitchEntity):
             _LOGGER.debug(f"MSpa temperature unit command response: {response}")
 
             if response.get("code") == 0 and response.get("message") == "SUCCESS":
-                # Small delay to ensure API state is updated before refresh
-                await asyncio.sleep(0.5)
+                # Delay to ensure API state is updated before refresh
+                await asyncio.sleep(2.0)
                 await self.coordinator.async_request_refresh()
                 _LOGGER.debug("Set temperature unit to Celsius.")
             else:
