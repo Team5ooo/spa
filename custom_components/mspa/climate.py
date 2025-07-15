@@ -1,4 +1,3 @@
-import asyncio
 import logging
 from datetime import timedelta
 from typing import Any, TYPE_CHECKING
@@ -154,10 +153,11 @@ class MSpaClimate(CoordinatorEntity, ClimateEntity):
             _LOGGER.debug(f"MSpa temperature command response: {response}")
 
             if response.get("code") == 0 and response.get("message") == "SUCCESS":
-                # Delay to ensure API state is updated before refresh
-                await asyncio.sleep(2.0)
-                await self.coordinator.async_request_refresh()
-                _LOGGER.debug("Triggered immediate refresh after temperature change.")
+                # Optimistic update - immediately update coordinator data
+                if hasattr(self.coordinator, 'data') and self.coordinator.data:
+                    self.coordinator.data["temperature_setting"] = api_temp_value
+                    self.coordinator.async_set_updated_data(self.coordinator.data)
+                _LOGGER.debug("Optimistically updated temperature setting.")
             else:
                 _LOGGER.warning(f"Unexpected MSpa temperature command response: {response}")
 
@@ -181,10 +181,12 @@ class MSpaClimate(CoordinatorEntity, ClimateEntity):
             _LOGGER.debug(f"MSpa HVAC command response: {response}")
 
             if response.get("code") == 0 and response.get("message") == "SUCCESS":
-                # Delay to ensure API state is updated before refresh
-                await asyncio.sleep(2.0)
-                await self.coordinator.async_request_refresh()
-                _LOGGER.debug("Triggered immediate refresh after HVAC mode change.")
+                # Optimistic update - immediately update coordinator data
+                if hasattr(self.coordinator, 'data') and self.coordinator.data:
+                    for key, value in desired_state.items():
+                        self.coordinator.data[key] = value
+                    self.coordinator.async_set_updated_data(self.coordinator.data)
+                _LOGGER.debug("Optimistically updated HVAC mode.")
             else:
                 _LOGGER.warning(f"Unexpected MSpa HVAC command response: {response}")
 

@@ -1,4 +1,3 @@
-import asyncio
 import logging
 from datetime import timedelta
 import json
@@ -106,10 +105,12 @@ class MSpASwitch(CoordinatorEntity, SwitchEntity):
             _LOGGER.debug(f"MSpa command response: {response}")
 
             if response.get("code") == 0 and response.get("message") == "SUCCESS":
-                # Delay to ensure API state is updated before refresh
-                await asyncio.sleep(2.0)
-                await self.coordinator.async_request_refresh()
-                _LOGGER.debug("Triggered immediate refresh after successful turn_on command.")
+                # Optimistic update - immediately update coordinator data
+                if hasattr(self.coordinator, 'data') and self.coordinator.data:
+                    for key, value in desired_state.items():
+                        self.coordinator.data[key] = value
+                    self.coordinator.async_set_updated_data(self.coordinator.data)
+                _LOGGER.debug(f"Optimistically updated {self._data_key} to ON")
             else:
                 _LOGGER.warning(f"Unexpected MSpa command response: {response}")
 
@@ -130,10 +131,12 @@ class MSpASwitch(CoordinatorEntity, SwitchEntity):
             response = await self._api.send_device_command(desired_state)
             _LOGGER.debug(f"MSpa command response: {response}")
             if response.get("code") == 0 and response.get("message") == "SUCCESS":
-                # Delay to ensure API state is updated before refresh
-                await asyncio.sleep(2.0)
-                await self.coordinator.async_request_refresh()
-                _LOGGER.debug("Triggered immediate refresh after successful turn_off command.")
+                # Optimistic update - immediately update coordinator data
+                if hasattr(self.coordinator, 'data') and self.coordinator.data:
+                    for key, value in desired_state.items():
+                        self.coordinator.data[key] = value
+                    self.coordinator.async_set_updated_data(self.coordinator.data)
+                _LOGGER.debug(f"Optimistically updated {self._data_key} to OFF")
             else:
                 _LOGGER.warning(f"Unexpected MSpa command response: {response}")
         except MSPAAPIException as e:
@@ -176,10 +179,11 @@ class MSpaTemperatureUnitSwitch(CoordinatorEntity, SwitchEntity):
             _LOGGER.debug(f"MSpa temperature unit command response: {response}")
 
             if response.get("code") == 0 and response.get("message") == "SUCCESS":
-                # Delay to ensure API state is updated before refresh
-                await asyncio.sleep(2.0)
-                await self.coordinator.async_request_refresh()
-                _LOGGER.debug("Set temperature unit to Fahrenheit.")
+                # Optimistic update - immediately update coordinator data
+                if hasattr(self.coordinator, 'data') and self.coordinator.data:
+                    self.coordinator.data["temperature_unit"] = 1
+                    self.coordinator.async_set_updated_data(self.coordinator.data)
+                _LOGGER.debug("Optimistically set temperature unit to Fahrenheit.")
             else:
                 _LOGGER.warning(f"Unexpected MSpa temperature unit response: {response}")
 
@@ -194,10 +198,11 @@ class MSpaTemperatureUnitSwitch(CoordinatorEntity, SwitchEntity):
             _LOGGER.debug(f"MSpa temperature unit command response: {response}")
 
             if response.get("code") == 0 and response.get("message") == "SUCCESS":
-                # Delay to ensure API state is updated before refresh
-                await asyncio.sleep(2.0)
-                await self.coordinator.async_request_refresh()
-                _LOGGER.debug("Set temperature unit to Celsius.")
+                # Optimistic update - immediately update coordinator data
+                if hasattr(self.coordinator, 'data') and self.coordinator.data:
+                    self.coordinator.data["temperature_unit"] = 0
+                    self.coordinator.async_set_updated_data(self.coordinator.data)
+                _LOGGER.debug("Optimistically set temperature unit to Celsius.")
             else:
                 _LOGGER.warning(f"Unexpected MSpa temperature unit response: {response}")
 

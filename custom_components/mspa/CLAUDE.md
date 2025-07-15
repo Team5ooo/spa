@@ -31,7 +31,8 @@ The integration follows Home Assistant's standard structure:
 ### Data Flow
 - **MSPADataUpdateCoordinator**: Manages polling (15-minute intervals) and data sharing between entities
 - **Dependency Logic**: Heater/UVC require filter to be on; turning off filter disables heater/ozone/UVC
-- **State Management**: Local state updates after successful API commands to improve responsiveness
+- **Optimistic State Updates**: Immediate local state updates after successful API commands for instant UI feedback
+- **Error Handling**: Failed commands trigger coordinator refresh to revert optimistic updates
 
 ### Entity Structure
 - Temperature sensors use raw API values (already in correct Celsius) with automatic unit conversion
