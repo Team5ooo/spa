@@ -41,7 +41,7 @@ class MSpaBubbleLevelButton(CoordinatorEntity, ButtonEntity):
         self._api = api
         self._attr_name = "Bubble Level"
         self._attr_unique_id = f"mspa_{api.device_id}_bubble_level_button"
-        self._attr_icon = "mdi:numeric"
+        self._attr_icon = "mdi:gesture-tap"
 
     @property
     def available(self) -> bool:

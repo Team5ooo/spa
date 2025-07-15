@@ -86,7 +86,7 @@ class MSpANumericSensor(CoordinatorEntity, SensorEntity):
         self._attr_name = name
         self._attr_unique_id = f"mspa_{coordinator._api.device_id}_{data_key}"
         if data_key == "water_temperature":
-            self._attr_icon = "mdi:thermometer"
+            self._attr_icon = "mdi:thermometer-water"
         elif data_key == "temperature_setting":
             self._attr_icon = "mdi:thermostat"
 
@@ -117,7 +117,7 @@ class MSpABubbleSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self._attr_name = "Bubble Level"
         self._attr_unique_id = f"mspa_{coordinator._api.device_id}_bubble_level"
-        self._attr_icon = "mdi:chart-bubble"
+        self._attr_icon = "mdi:bubble"
 
     @property
     def state(self):

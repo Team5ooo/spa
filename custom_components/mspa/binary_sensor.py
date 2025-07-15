@@ -48,6 +48,18 @@ class MSpABinarySensor(CoordinatorEntity, BinarySensorEntity):
         self._data_key = data_key
         self._attr_name = name
         self._attr_unique_id = f"mspa_{coordinator._api.device_id}_{data_key}_binary"
+        
+        # Set descriptive icons based on sensor type
+        icon_map = {
+            "jet_state": "mdi:hydro-power",
+            "heater_state": "mdi:fire",
+            "filter_state": "mdi:air-filter",
+            "bubble_state": "mdi:bubble",
+            "ozone_state": "mdi:molecule",
+            "uvc_state": "mdi:lightbulb-on",
+            "safety_lock": "mdi:lock"
+        }
+        self._attr_icon = icon_map.get(data_key, "mdi:circle")
 
     @property
     def is_on(self):

@@ -65,6 +65,18 @@ class MSpASwitch(CoordinatorEntity, SwitchEntity):
         self._data_key = data_key
         self._attr_name = name
         self._attr_unique_id = f"mspa_{api.device_id}_{data_key}_switch"
+        
+        # Set descriptive icons based on switch type
+        icon_map = {
+            "heater_state": "mdi:fire",
+            "filter_state": "mdi:air-filter",
+            "bubble_state": "mdi:bubble",
+            "ozone_state": "mdi:molecule",
+            "uvc_state": "mdi:lightbulb-on",
+            "safety_lock": "mdi:lock",
+            "jet_state": "mdi:hydro-power"
+        }
+        self._attr_icon = icon_map.get(data_key, "mdi:power")
 
     @property
     def is_on(self):
@@ -135,12 +147,19 @@ class MSpaTemperatureUnitSwitch(CoordinatorEntity, SwitchEntity):
         self._api = api
         self._attr_name = "Temperature Unit (°F)"
         self._attr_unique_id = f"mspa_{api.device_id}_temperature_unit"
-        self._attr_icon = "mdi:thermometer"
+        # Dynamic icon will be set in the icon property
 
     @property
     def is_on(self):
         """Return True if set to Fahrenheit (1), False if Celsius (0)."""
         return self.coordinator.data.get("temperature_unit", 0) == 1
+
+    @property
+    def icon(self):
+        """Return dynamic icon based on current temperature unit."""
+        if self.coordinator.data.get("temperature_unit", 0) == 1:
+            return "mdi:temperature-fahrenheit"
+        return "mdi:temperature-celsius"
 
     @property
     def available(self) -> bool:
