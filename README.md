@@ -8,14 +8,12 @@ A Home Assistant custom integration for MSpa (hot tub/spa) devices. Control and 
 
 ## Features
 
-- **🌡️ Temperature Control**: Full climate entity with accurate temperature setting and HVAC control
+- **🌡️ Temperature Control**: Set target temperature and control heating
 - **🌡️ Temperature Monitoring**: Water temperature and target temperature sensors
 - **🔛 Device Control**: Control heater, filter, bubbles, ozone, UVC, and safety lock
-- **🫧 Bubble Level Control**: Adjustable bubble intensity (Low/Medium/High)
+- **🫧 Bubble Control**: Adjustable bubble intensity (Low/Medium/High)
 - **🌡️ Temperature Units**: Toggle between Celsius and Fahrenheit
 - **🔄 Automatic Authentication**: Uses username/password - no manual token required
-- **⚡ Instant Updates**: Immediate state refresh after commands (like mobile app)
-- **🧹 Clean Interface**: No duplicate entities - switches show both control and status
 - **🔐 Secure**: All communication encrypted with proper API authentication
 
 ## Supported Devices
@@ -53,12 +51,7 @@ This integration works with MSpa devices that use the MSpa mobile app for contro
 
 ### Prerequisites
 
-Before setting up the integration, you'll need:
-
-1. **MSpa Account**: Username and password for your MSpa app
-2. **Device Information**:
-   - **Device ID**: Found in your MSpa app settings
-   - **Product ID**: Also found in your MSpa app settings
+Before setting up the integration, you'll need your MSpa account username and password.
 
 ### Setup Steps
 
@@ -71,8 +64,6 @@ Before setting up the integration, you'll need:
 2. **Enter Credentials**:
    - **Username**: Your MSpa account email
    - **Password**: Your MSpa account password
-   - **Device ID**: Your MSpa device ID
-   - **Product ID**: Your MSpa product ID
 
 3. **Complete Setup**:
    - The integration will test the connection
@@ -88,22 +79,19 @@ The integration creates the following entities:
 ### Sensors
 - `sensor.mspa_water_temperature` - Current water temperature
 - `sensor.mspa_target_temperature` - Target temperature setting
-- `sensor.mspa_bubble_level` - Bubble level (Off/Low/Medium/High)
+- `sensor.mspa_bubble_level` - Bubble level display (Off/Low/Medium/High)
 
-### Switches (Control & Status)
-- `switch.mspa_heater` - Heater control and status
-- `switch.mspa_filter` - Filter control and status
-- `switch.mspa_bubbles_state` - Bubble control and status
-- `switch.mspa_ozone` - Ozone control and status
-- `switch.mspa_uvc` - UVC control and status
-- `switch.mspa_safety_lock` - Safety lock control and status
+### Switches
+- `switch.mspa_heater` - Heater control
+- `switch.mspa_filter` - Filter control
+- `switch.mspa_bubbles` - Bubble on/off control
+- `switch.mspa_ozone` - Ozone control
+- `switch.mspa_uvc` - UVC control
+- `switch.mspa_safety_lock` - Safety lock control
 - `switch.mspa_temperature_unit_f` - Temperature unit toggle (°C/°F)
 
-### Buttons
-- `button.mspa_bubble_level` - Cycle bubble intensity levels (only when bubbles are on)
-
-### Binary Sensors (Read-only Status)
-- `binary_sensor.mspa_jet` - Jet status (read-only)
+### Select Dropdowns
+- `select.mspa_bubble_level` - Bubble intensity selection (Low/Medium/High)
 
 ## Automation Examples
 
@@ -127,23 +115,21 @@ automation:
           hvac_mode: heat
 ```
 
-### Bubble routine - start low and increase
+### Daily filter maintenance cycle
 ```yaml
 automation:
-  - alias: "MSpa Bubble Sequence"
+  - alias: "MSpa Filter Maintenance"
     trigger:
-      platform: state
-      entity_id: switch.mspa_bubbles_state
-      to: "on"
+      platform: time
+      at: "02:00:00"  # 2 AM daily
     action:
-      - delay: "00:05:00"  # 5 minutes at current level
-      - service: button.press
+      - service: switch.turn_on
         target:
-          entity_id: button.mspa_bubble_level
-      - delay: "00:05:00"  # 5 minutes at next level
-      - service: button.press
+          entity_id: switch.mspa_filter
+      - delay: "04:00:00"  # Run for 4 hours
+      - service: switch.turn_off
         target:
-          entity_id: button.mspa_bubble_level
+          entity_id: switch.mspa_filter
 ```
 
 ### Notify when temperature reaches target
@@ -159,17 +145,35 @@ automation:
         message: "MSpa has reached target temperature!"
 ```
 
-### Auto temperature unit based on weather
+### Weekend spa preparation
 ```yaml
 automation:
-  - alias: "MSpa Temperature Unit Auto"
+  - alias: "MSpa Weekend Prep"
     trigger:
-      platform: homeassistant
-      event: start
+      platform: time
+      at: "16:00:00"  # 4 PM
+    condition:
+      condition: time
+      weekday:
+        - fri
+        - sat
     action:
-      - service: switch.turn_{{ 'on' if states('weather.home') | state_attr('temperature_unit') == '°F' else 'off' }}
+      - service: climate.set_temperature
         target:
-          entity_id: switch.mspa_temperature_unit_f
+          entity_id: climate.mspa_temperature
+        data:
+          temperature: 40
+      - service: climate.set_hvac_mode
+        target:
+          entity_id: climate.mspa_temperature
+        data:
+          hvac_mode: heat
+      - service: switch.turn_on
+        target:
+          entity_id: switch.mspa_filter
+      - service: switch.turn_on
+        target:
+          entity_id: switch.mspa_ozone
 ```
 
 ## Troubleshooting
@@ -178,7 +182,6 @@ automation:
 
 1. **Authentication Failed**:
    - Verify your username and password are correct
-   - Check your device ID and product ID
    - Ensure your MSpa account is active
 
 2. **Connection Issues**:
@@ -209,7 +212,7 @@ The integration uses the following architecture:
 
 - **API Client (`mspaapi.py`)**: Handles authentication and API communication
 - **Configuration Flow (`config_flow.py`)**: User setup wizard
-- **Platforms**: Sensor, switch, and binary sensor implementations
+- **Platforms**: Climate, sensor, switch, select, and binary sensor implementations
 - **Coordinator**: Manages data updates and sharing between entities
 
 ### Contributing
@@ -238,8 +241,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Acknowledgments
 
 - Thanks to the Home Assistant community
-- MSpa device owners who provided testing and feedback
-- Contributors who helped with development and testing
 
 ## Disclaimer
 

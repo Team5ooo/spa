@@ -39,7 +39,6 @@ async def async_setup_entry(
         MSpASwitch(coordinator, api, "bubble_state", "Bubbles"),
         MSpASwitch(coordinator, api, "ozone_state", "Ozone"),
         MSpASwitch(coordinator, api, "uvc_state", "UVC"),
-       # MSpASwitch(coordinator, api, "jet_state", "Jet"),
         MSpASwitch(coordinator, api, "safety_lock", "Safety Lock"),
         MSpaTemperatureUnitSwitch(coordinator, api),
     ]
@@ -72,8 +71,7 @@ class MSpASwitch(CoordinatorEntity, SwitchEntity):
             "bubble_state": "mdi:bubble",
             "ozone_state": "mdi:molecule",
             "uvc_state": "mdi:lightbulb-on",
-            "safety_lock": "mdi:lock",
-            "jet_state": "mdi:hydro-power"
+            "safety_lock": "mdi:lock"
         }
         self._attr_icon = icon_map.get(data_key, "mdi:power")
 

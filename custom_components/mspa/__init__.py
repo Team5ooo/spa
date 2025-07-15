@@ -14,7 +14,7 @@ from .mspaapi import MSPAAPI, MSPAAPIException
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = [Platform.SENSOR,Platform.SWITCH,Platform.CLIMATE,Platform.BINARY_SENSOR,Platform.SELECT]
+PLATFORMS: list[Platform] = [Platform.SENSOR,Platform.SWITCH,Platform.CLIMATE,Platform.SELECT]
 
 SCAN_INTERVAL = timedelta(minutes=15)
 
