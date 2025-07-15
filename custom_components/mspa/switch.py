@@ -44,7 +44,7 @@ async def async_setup_entry(
 
     # Create a coordinator to manage data updates
     coordinator = MSPADataUpdateCoordinator(hass, api)
-    await coordinator.async_refresh()
+    await coordinator.async_config_entry_first_refresh()
 
     # Define the switches you want to create
     switches = [
@@ -87,13 +87,6 @@ class MSPADataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER.error("Error fetching MSpa data: %s", e)
             return self.data  # Return existing data if fetch fails
 
-    async def async_refresh(self):
-        """Refresh data and update entity states."""
-        await super().async_refresh()
-        entities_to_refresh = self.hass.data.get(DOMAIN, {}).get("entities", [])
-        
-        for entity in entities_to_refresh:
-            entity.async_schedule_update_ha_state(True)
 
 
 
@@ -136,20 +129,9 @@ class MSpASwitch(CoordinatorEntity, SwitchEntity):
             _LOGGER.debug(f"MSpa command response: {response}")
 
             if response.get("code") == 0 and response.get("message") == "SUCCESS":
-                # Update coordinator data
-                for key in desired_state:
-                    self.coordinator.data[key] = desired_state[key]
-
-                # Manually update the state of the affected entities
-                self.async_write_ha_state()  # Update the state of this switch
-
-                # Ensure that the filter switch is also updated if needed
-                entities_to_refresh = self.hass.data.get(DOMAIN, {}).get("entities", [])
-                for entity in entities_to_refresh:
-                    if entity._data_key in desired_state:
-                        entity.async_write_ha_state()
-
-                _LOGGER.debug("Switch state updated locally after successful command.")
+                # Immediately refresh data from API to get real device state
+                await self.coordinator.async_request_refresh()
+                _LOGGER.debug("Triggered immediate refresh after successful turn_on command.")
             else:
                 _LOGGER.warning(f"Unexpected MSpa command response: {response}")
 
@@ -170,20 +152,9 @@ class MSpASwitch(CoordinatorEntity, SwitchEntity):
             response = await self._api.send_device_command(desired_state)
             _LOGGER.debug(f"MSpa command response: {response}")
             if response.get("code") == 0 and response.get("message") == "SUCCESS":
-                # Update coordinator data
-                for key in desired_state:
-                    self.coordinator.data[key] = desired_state[key]
-                
-                # Manually update the state of the affected entities
-                self.async_write_ha_state()  # Update the state of this switch
-
-                # Ensure that dependencies are also updated
-                entities_to_refresh = self.hass.data.get(DOMAIN, {}).get("entities", [])
-                for entity in entities_to_refresh:
-                    if entity._data_key in desired_state:
-                        entity.async_write_ha_state()
-                
-                _LOGGER.debug("Switch state updated locally after successful command.")
+                # Immediately refresh data from API to get real device state
+                await self.coordinator.async_request_refresh()
+                _LOGGER.debug("Triggered immediate refresh after successful turn_off command.")
             else:
                 _LOGGER.warning(f"Unexpected MSpa command response: {response}")
         except MSPAAPIException as e:

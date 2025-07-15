@@ -42,7 +42,7 @@ async def async_setup_entry(
 
     # Create a coordinator to manage data updates
     coordinator = MSPADataUpdateCoordinator(hass, api)
-    await coordinator.async_refresh()
+    await coordinator.async_config_entry_first_refresh()
 
     async_add_entities([
         MSpANumericSensor(coordinator, "water_temperature", "Water Temperature"),

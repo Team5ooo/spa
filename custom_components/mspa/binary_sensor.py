@@ -40,7 +40,7 @@ async def async_setup_entry(
 
     # Create a coordinator to manage data updates
     coordinator = MSPADataUpdateCoordinator(hass, api)
-    await coordinator.async_refresh()
+    await coordinator.async_config_entry_first_refresh()
 
     # Define the binary sensors you want to create
     binary_sensors = [
