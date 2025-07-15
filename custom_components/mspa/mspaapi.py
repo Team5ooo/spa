@@ -80,8 +80,8 @@ class MSPAAPI:
         
         return headers
 
-    def _build_login_headers(self):
-        """Build headers for initial login (without signature)."""
+    def _build_login_headers(self, payload=None):
+        """Build headers for initial login (with signature but no token)."""
         nonce = self._generate_nonce()
         timestamp = self._generate_timestamp()
         
@@ -93,6 +93,10 @@ class MSPAAPI:
             "lan_code": "en",
             "Content-Type": "application/json"
         }
+        
+        # Generate signature for login payload
+        if payload:
+            headers["sign"] = self._generate_signature(payload, nonce, timestamp)
         
         return headers
 
@@ -120,8 +124,8 @@ class MSPAAPI:
         
         try:
             url = f"{self.base_url.rstrip('/')}/enduser/get_token/"
-            # Build headers WITHOUT signature for initial login
-            headers = self._build_login_headers()
+            # Build headers WITH signature but WITHOUT token for login
+            headers = self._build_login_headers(login_payload)
             
             resp = await self._session.post(
                 url,
