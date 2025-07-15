@@ -37,6 +37,7 @@ async def async_setup_entry(
     switches = [
         MSpASwitch(coordinator, api, "heater_state", "Heater"),
         MSpASwitch(coordinator, api, "filter_state", "Filter"),
+        MSpASwitch(coordinator, api, "bubble_state", "Bubbles"),
         MSpASwitch(coordinator, api, "ozone_state", "Ozone"),
         MSpASwitch(coordinator, api, "uvc_state", "UVC"),
        # MSpASwitch(coordinator, api, "jet_state", "Jet"),
@@ -96,7 +97,10 @@ class MSpASwitch(CoordinatorEntity, SwitchEntity):
             if self._data_key in ["heater_state", "uvc_state"]:
                 desired_state["filter_state"] = 1
 
-            # No special handling needed for removed bubble_state
+            # Set bubble_level when turning on bubbles
+            if self._data_key == "bubble_state":
+                bubble_level = self.coordinator.data.get("bubble_level", 1)  # Default to Low if not set
+                desired_state["bubble_level"] = bubble_level
 
             response = await self._api.send_device_command(desired_state)
             _LOGGER.debug(f"MSpa command response: {response}")

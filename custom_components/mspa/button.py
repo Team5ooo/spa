@@ -33,52 +33,53 @@ async def async_setup_entry(
 
 
 class MSpaBubbleButton(CoordinatorEntity, ButtonEntity):
-    """Button to cycle through bubble levels: Off -> Low -> Medium -> High -> Off."""
+    """Button to cycle through bubble levels: Low -> Medium -> High -> Low (only when bubbles are on)."""
 
     def __init__(self, coordinator: "MSPADataUpdateCoordinator", api: MSPAAPI):
-        """Initialize the bubble button."""
+        """Initialize the bubble level button."""
         super().__init__(coordinator)
         self._api = api
-        self._attr_name = "Bubbles"
-        self._attr_unique_id = f"mspa_{api.device_id}_bubble_button"
-        self._attr_icon = "mdi:bubble"
+        self._attr_name = "Bubble Level"
+        self._attr_unique_id = f"mspa_{api.device_id}_bubble_level_button"
+        self._attr_icon = "mdi:gesture-tap"
 
     @property
     def available(self) -> bool:
-        """Return True if entity is available."""
-        return bool(self.coordinator.data)
+        """Return True if entity is available and bubbles are on."""
+        bubble_state = self.coordinator.data.get("bubble_state", 0)
+        return bool(self.coordinator.data) and bubble_state == 1
 
     async def async_press(self) -> None:
-        """Cycle through bubble levels: Off (0) -> Low (1) -> Medium (2) -> High (3) -> Off (0)."""
+        """Cycle through bubble levels: Low (1) -> Medium (2) -> High (3) -> Low (1)."""
         try:
-            current_level = self.coordinator.data.get("bubble_level", 0)
+            # Only change level if bubbles are currently on
+            bubble_state = self.coordinator.data.get("bubble_state", 0)
+            if bubble_state != 1:
+                _LOGGER.info("Bubbles are off, turn on bubbles first to change level")
+                return
+
+            current_level = self.coordinator.data.get("bubble_level", 1)
             
-            # Cycle through levels: 0->1->2->3->0
-            new_level = (current_level + 1) % 4
+            # Cycle through levels: 1->2->3->1 (Low->Medium->High->Low)
+            new_level = (current_level % 3) + 1
             
-            # Determine bubble state based on level
-            if new_level == 0:
-                # Off
-                desired_state = {"bubble_state": 0, "bubble_level": 0}
-            else:
-                # Low (1), Medium (2), High (3)
-                desired_state = {"bubble_state": 1, "bubble_level": new_level}
+            # Only change bubble_level, don't touch bubble_state
+            desired_state = {"bubble_level": new_level}
             
             # Optimistic update - update coordinator data immediately
             if hasattr(self.coordinator, 'data') and self.coordinator.data:
                 self.coordinator.data["bubble_level"] = new_level
-                self.coordinator.data["bubble_state"] = 1 if new_level > 0 else 0
                 self.coordinator.async_set_updated_data(self.coordinator.data)
             
             response = await self._api.send_device_command(desired_state)
-            _LOGGER.debug(f"MSpa bubble command response: {response}")
+            _LOGGER.debug(f"MSpa bubble level command response: {response}")
 
             if response.get("code") == 0 and response.get("message") == "SUCCESS":
                 await self.coordinator.async_request_refresh()
-                level_names = {0: "Off", 1: "Low", 2: "Medium", 3: "High"}
+                level_names = {1: "Low", 2: "Medium", 3: "High"}
                 _LOGGER.debug(f"Changed bubble level to {level_names.get(new_level, new_level)}.")
             else:
-                _LOGGER.warning(f"Unexpected MSpa bubble response: {response}")
+                _LOGGER.warning(f"Unexpected MSpa bubble level response: {response}")
                 # Revert optimistic update on failure
                 await self.coordinator.async_request_refresh()
 
