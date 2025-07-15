@@ -117,7 +117,7 @@ class MSpABubbleSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self._attr_name = "Bubble Level"
         self._attr_unique_id = f"mspa_{coordinator._api.device_id}_bubble_level"
-        self._attr_icon = "mdi:bubble"
+        self._attr_icon = "mdi:chart-bubble"
 
     @property
     def state(self):
