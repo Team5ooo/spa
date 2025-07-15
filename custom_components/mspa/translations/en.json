@@ -1,0 +1,21 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "Please provide the API Token And ID's to access your MSpa Account",
+                "data": {
+                    "API_KEY": "API Key",
+                    "DEVICE_ID": "Device ID",
+                    "PRODUCT_ID": "Product ID"
+                }
+            }
+        },
+        "error": {
+            "auth": "Username/Password is wrong.",
+            "connection": "Unable to connect to the server.",
+            "unknown": "Unknown error occurred.",
+            "cannot_connect": "Failed to connect",
+            "invalid_api_key": "Invalid API key"
+        }
+    }
+}

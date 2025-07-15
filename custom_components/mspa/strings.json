@@ -1,0 +1,36 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "API_KEY": {
+            "name": "[%key:common::config_flow::data::api_key%]",
+            "description": "Enter your MSpa API key."
+          },
+          "DEVICE_ID": {
+            "name": "[%key:common::config_flow::data::device_id%]", 
+            "description": "Enter your MSpa device ID."
+          },
+          "PRODUCT_ID": {
+            "name": "[%key:common::config_flow::data::product_id%]",  
+            "description": "Enter your MSpa product ID."
+          }
+        }
+      },
+      "api_base_url": {
+        "data": {
+          "API_BASE_URL": {
+            "name": "[%key:common::config_flow::data::api_base_url%]",
+            "description": "Enter the base URL for the MSpa API."
+          }
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
+      "invalid_device_id": "[%key:common::config_flow::error::invalid_device_id%]",
+      "invalid_product_id": "[%key:common::config_flow::error::invalid_product_id%]"  
+    }
+  }
+}

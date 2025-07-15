@@ -1,0 +1,9 @@
+{
+  "name": "MSpa",
+  "content_in_root": false,
+  "filename": "mspa.zip",
+  "country": ["NO", "DK", "SE", "FI", "DE", "NL", "BE", "FR", "ES", "IT", "GB", "IE", "PT", "AT", "CH", "LU", "PL", "CZ", "SK", "HU", "SI", "HR", "RO", "BG", "GR", "CY", "MT", "EE", "LV", "LT", "US", "CA", "AU", "NZ"],
+  "domains": ["mspa"],
+  "iot_class": "Cloud Polling",
+  "homeassistant": "2023.1.0"
+}
