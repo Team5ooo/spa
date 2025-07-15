@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from typing import TYPE_CHECKING
 
@@ -92,6 +93,8 @@ class MSpaBubbleLevelSelect(CoordinatorEntity, SelectEntity):
             _LOGGER.debug(f"MSpa bubble level select response: {response}")
 
             if response.get("code") == 0 and response.get("message") == "SUCCESS":
+                # Small delay to ensure API state is updated before refresh
+                await asyncio.sleep(0.5)
                 await self.coordinator.async_request_refresh()
                 _LOGGER.debug(f"Changed bubble level to {option} and turned on bubbles.")
             else:

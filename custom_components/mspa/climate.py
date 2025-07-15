@@ -154,7 +154,8 @@ class MSpaClimate(CoordinatorEntity, ClimateEntity):
             _LOGGER.debug(f"MSpa temperature command response: {response}")
 
             if response.get("code") == 0 and response.get("message") == "SUCCESS":
-                # Immediately refresh data from API to get real device state
+                # Small delay to ensure API state is updated before refresh
+                await asyncio.sleep(0.5)
                 await self.coordinator.async_request_refresh()
                 _LOGGER.debug("Triggered immediate refresh after temperature change.")
             else:
@@ -180,7 +181,8 @@ class MSpaClimate(CoordinatorEntity, ClimateEntity):
             _LOGGER.debug(f"MSpa HVAC command response: {response}")
 
             if response.get("code") == 0 and response.get("message") == "SUCCESS":
-                # Immediately refresh data from API to get real device state
+                # Small delay to ensure API state is updated before refresh
+                await asyncio.sleep(0.5)
                 await self.coordinator.async_request_refresh()
                 _LOGGER.debug("Triggered immediate refresh after HVAC mode change.")
             else:
