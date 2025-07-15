@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 
 # TODO List the platforms that you want to support.
 # For your initial PR, limit it to 1 platform.
-PLATFORMS: list[Platform] = [Platform.SENSOR,Platform.SWITCH]
+PLATFORMS: list[Platform] = [Platform.SENSOR,Platform.SWITCH,Platform.CLIMATE,Platform.BINARY_SENSOR]
 
 
 # TODO Create ConfigEntry type alias with API object

@@ -55,6 +55,8 @@ async def async_setup_entry(
         MSpASwitch(coordinator, api, "uvc_state", "UVC"),
        # MSpASwitch(coordinator, api, "jet_state", "Jet"),
         MSpASwitch(coordinator, api, "safety_lock", "Safety Lock"),
+        MSpaTemperatureUnitSwitch(coordinator, api),
+        MSpABubbleLevelSelect(coordinator, api),
     ]
 
     # Add entities to hass.data for easier access in async_turn_on and async_turn_off
@@ -159,3 +161,119 @@ class MSpASwitch(CoordinatorEntity, SwitchEntity):
                 _LOGGER.warning(f"Unexpected MSpa command response: {response}")
         except MSPAAPIException as e:
             _LOGGER.error("Error turning off MSpa switch: %s", e)
+
+
+class MSpaTemperatureUnitSwitch(CoordinatorEntity, SwitchEntity):
+    """Switch to toggle between Celsius and Fahrenheit."""
+
+    def __init__(self, coordinator: MSPADataUpdateCoordinator, api: MSPAAPI):
+        """Initialize the temperature unit switch."""
+        super().__init__(coordinator)
+        self._api = api
+        self._attr_name = "Temperature Unit (°F)"
+        self._attr_unique_id = f"mspa_{api.device_id}_temperature_unit"
+        self._attr_icon = "mdi:thermometer"
+
+    @property
+    def is_on(self):
+        """Return True if set to Fahrenheit (1), False if Celsius (0)."""
+        return self.coordinator.data.get("temperature_unit", 0) == 1
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return bool(self.coordinator.data)
+
+    async def async_turn_on(self, **kwargs):
+        """Set temperature unit to Fahrenheit."""
+        try:
+            desired_state = {"temperature_unit": 1}
+            response = await self._api.send_device_command(desired_state)
+            _LOGGER.debug(f"MSpa temperature unit command response: {response}")
+
+            if response.get("code") == 0 and response.get("message") == "SUCCESS":
+                await self.coordinator.async_request_refresh()
+                _LOGGER.debug("Set temperature unit to Fahrenheit.")
+            else:
+                _LOGGER.warning(f"Unexpected MSpa temperature unit response: {response}")
+
+        except MSPAAPIException as e:
+            _LOGGER.error("Error setting temperature unit to Fahrenheit: %s", e)
+
+    async def async_turn_off(self, **kwargs):
+        """Set temperature unit to Celsius."""
+        try:
+            desired_state = {"temperature_unit": 0}
+            response = await self._api.send_device_command(desired_state)
+            _LOGGER.debug(f"MSpa temperature unit command response: {response}")
+
+            if response.get("code") == 0 and response.get("message") == "SUCCESS":
+                await self.coordinator.async_request_refresh()
+                _LOGGER.debug("Set temperature unit to Celsius.")
+            else:
+                _LOGGER.warning(f"Unexpected MSpa temperature unit response: {response}")
+
+        except MSPAAPIException as e:
+            _LOGGER.error("Error setting temperature unit to Celsius: %s", e)
+
+
+class MSpABubbleLevelSelect(CoordinatorEntity, SwitchEntity):
+    """Switch to cycle through bubble levels (1-3)."""
+
+    def __init__(self, coordinator: MSPADataUpdateCoordinator, api: MSPAAPI):
+        """Initialize the bubble level selector."""
+        super().__init__(coordinator)
+        self._api = api
+        self._attr_name = "Bubble Level Up"
+        self._attr_unique_id = f"mspa_{api.device_id}_bubble_level_select"
+        self._attr_icon = "mdi:bubble"
+
+    @property
+    def is_on(self):
+        """Always return False since this is a momentary switch."""
+        return False
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return bool(self.coordinator.data)
+
+    async def async_turn_on(self, **kwargs):
+        """Increase bubble level (1->2->3->1)."""
+        try:
+            current_level = self.coordinator.data.get("bubble_level", 1)
+            # Cycle through levels: 1->2->3->1
+            new_level = (current_level % 3) + 1
+            
+            desired_state = {
+                "bubble_level": new_level,
+                "bubble_state": 1  # Ensure bubbles are on
+            }
+            
+            response = await self._api.send_device_command(desired_state)
+            _LOGGER.debug(f"MSpa bubble level command response: {response}")
+
+            if response.get("code") == 0 and response.get("message") == "SUCCESS":
+                await self.coordinator.async_request_refresh()
+                _LOGGER.debug(f"Set bubble level to {new_level}.")
+            else:
+                _LOGGER.warning(f"Unexpected MSpa bubble level response: {response}")
+
+        except MSPAAPIException as e:
+            _LOGGER.error("Error setting bubble level: %s", e)
+
+    async def async_turn_off(self, **kwargs):
+        """Turn off bubbles."""
+        try:
+            desired_state = {"bubble_state": 0}
+            response = await self._api.send_device_command(desired_state)
+            _LOGGER.debug(f"MSpa bubble off command response: {response}")
+
+            if response.get("code") == 0 and response.get("message") == "SUCCESS":
+                await self.coordinator.async_request_refresh()
+                _LOGGER.debug("Turned off bubbles.")
+            else:
+                _LOGGER.warning(f"Unexpected MSpa bubble off response: {response}")
+
+        except MSPAAPIException as e:
+            _LOGGER.error("Error turning off bubbles: %s", e)

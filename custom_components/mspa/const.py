@@ -1,7 +1,7 @@
 """Constants for the MSpa integration."""
 
 DOMAIN = "mspa"
-PLATFORMS = ["sensor","switch"]
+PLATFORMS = ["sensor","switch","climate","binary_sensor"]
 
 API_BASE_URL = "https://api.iot.the-mspa.com/api"
 #DEVICE_ID = "02d822c7f1c611ee9eabeb5156bace20"
