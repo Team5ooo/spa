@@ -4,8 +4,6 @@ DOMAIN = "mspa"
 PLATFORMS = ["sensor","switch","climate","binary_sensor","button"]
 
 API_BASE_URL = "https://api.iot.the-mspa.com/api"
-#DEVICE_ID = "02d822c7f1c611ee9eabeb5156bace20"
-#PRODUCT_ID = "O0N301"
 DEVICE_STATUS_ENDPOINT = "device/thing_shadow"
 DEFAULT_NAME = "MSpa"
 
