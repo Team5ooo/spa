@@ -123,11 +123,11 @@ class MSpABubbleSensor(CoordinatorEntity, SensorEntity):
     def state(self):
         """Return the current bubble level."""
         if "bubble_level" in self.coordinator.data:
-            bubble_state = self.coordinator.data["bubble_level"]
+            bubble_level = self.coordinator.data["bubble_level"]
             return {
                 0: "Off",
-                1: "Low",
+                1: "Low", 
                 2: "Medium",
                 3: "High",
-            }.get(bubble_state, "Unknown")
+            }.get(bubble_level, "Unknown")
         return None
