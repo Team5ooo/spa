@@ -2,26 +2,30 @@
   "config": {
     "step": {
       "user": {
+        "title": "MSpa Account Login",
+        "description": "Enter your MSpa account credentials. The integration will automatically discover your devices.",
         "data": {
-          "API_KEY": {
-            "name": "[%key:common::config_flow::data::api_key%]",
-            "description": "Enter your MSpa API key."
+          "username": {
+            "name": "Username",
+            "description": "Your MSpa account username or email address"
           },
-          "DEVICE_ID": {
-            "name": "[%key:common::config_flow::data::device_id%]", 
-            "description": "Enter your MSpa device ID."
+          "password": {
+            "name": "Password",
+            "description": "Your MSpa account password"
           },
-          "PRODUCT_ID": {
-            "name": "[%key:common::config_flow::data::product_id%]",  
-            "description": "Enter your MSpa product ID."
+          "access_token": {
+            "name": "Access Token (Optional)",
+            "description": "Manual access token if login fails"
           }
         }
       },
-      "api_base_url": {
+      "device_selection": {
+        "title": "Select MSpa Device",
+        "description": "Multiple devices found. Please select your MSpa device.",
         "data": {
-          "API_BASE_URL": {
-            "name": "[%key:common::config_flow::data::api_base_url%]",
-            "description": "Enter the base URL for the MSpa API."
+          "device": {
+            "name": "Device",
+            "description": "Select your MSpa device from the list"
           }
         }
       }
@@ -29,6 +33,8 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
+      "signature_failed": "Authentication failed: Invalid signature. Please check your credentials.",
+      "no_devices": "No MSpa devices found for this account. Please check your credentials and ensure your device is registered.",
       "invalid_device_id": "[%key:common::config_flow::error::invalid_device_id%]",
       "invalid_product_id": "[%key:common::config_flow::error::invalid_product_id%]"  
     }

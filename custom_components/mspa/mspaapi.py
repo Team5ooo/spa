@@ -217,6 +217,31 @@ class MSPAAPI:
         error_msg = data.get("message", "MSpa API call failed")
         raise MSPAAPIException(error_msg)
 
+    async def get_user_devices(self):
+        """Get list of devices associated with the user account."""
+        try:
+            response = await self._call("enduser/devices/")
+            devices = response.get("data", {}).get("list", [])
+            
+            # Extract relevant device information
+            device_list = []
+            for device in devices:
+                device_info = {
+                    "device_id": device.get("device_id"),
+                    "product_id": device.get("product_id"),
+                    "name": device.get("name") or device.get("device_alias"),
+                    "product_model": device.get("product_model"),
+                    "is_online": device.get("is_online", False),
+                    "is_connect": device.get("is_connect", False),
+                    "mac": device.get("mac"),
+                    "sn": device.get("sn")
+                }
+                device_list.append(device_info)
+            
+            return device_list
+        except MSPAAPIException as e:
+            raise MSPAAPIException(f"Failed to get user devices: {str(e)}")
+
     async def test_connection(self):
         payload = {
             "device_id": self.device_id,

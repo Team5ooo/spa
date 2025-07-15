@@ -18,6 +18,11 @@ class MSPAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    def __init__(self):
+        """Initialize the config flow."""
+        self.discovered_devices = None
+        self.selected_device = None
+
     async def async_step_user(self, user_input=None):
         """Handle the user step of the config flow."""
         errors = {}
@@ -25,38 +30,49 @@ class MSPAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             username = user_input["username"]
             password = user_input["password"]
-            device_id = user_input["device_id"]
-            product_id = user_input["product_id"]
             access_token = user_input.get("access_token")
 
-            # Test the connection using the provided credentials
+            # Test authentication and discover devices
             try:
-                _LOGGER.info("Testing connection for device: %s", device_id)
+                _LOGGER.info("Attempting login and device discovery")
                 api = MSPAAPI(
                     base_url=API_BASE_URL,
-                    device_id=device_id,
-                    product_id=product_id,
                     username=username,
                     password=password,
                     access_token=access_token
                 )
                 
-                # Test authentication and connection
+                # Authenticate first
                 if access_token:
                     _LOGGER.info("Using manual access token")
-                    connection_status = await api.test_connection()
                 else:
                     _LOGGER.info("Attempting login with username/password")
                     await api.login()
-                    connection_status = await api.test_connection()
                 
+                # Discover devices
+                devices = await api.get_user_devices()
                 await api.close()
                 
-                if connection_status:
-                    _LOGGER.info("Connection successful!")
+                if not devices:
+                    _LOGGER.error("No devices found for this account")
+                    errors["base"] = "no_devices"
+                elif len(devices) == 1:
+                    # Only one device, proceed directly
+                    device = devices[0]
+                    data = {
+                        "username": username,
+                        "password": password,
+                        "device_id": device["device_id"],
+                        "product_id": device["product_id"],
+                        "device_name": device["name"],
+                        "access_token": access_token
+                    }
+                    return self.async_create_entry(title=f"MSpa {device['name']}", data=data)
                 else:
-                    _LOGGER.error("Connection failed.")
-                    errors["base"] = "cannot_connect"
+                    # Multiple devices, show selection step
+                    self.discovered_devices = devices
+                    return await self.async_step_device_selection()
+                    
             except MSPAAPIException as e:
                 _LOGGER.error("Connection failed with exception: %s", e)
                 if "signature" in str(e).lower():
@@ -67,25 +83,15 @@ class MSPAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.error("Unexpected error during connection test: %s", e)
                 errors["base"] = "cannot_connect"
 
-            if not errors:
-                # If there are no errors, store the input and proceed
-                return self.async_create_entry(title=f"MSpa {device_id}", data=user_input)
-
-      # Dynamically create the data schema to use values from strings.json
-
+        # Simplified data schema - only username and password required
         data_schema = vol.Schema(
             {
                 vol.Required("username"): str,
                 vol.Required("password"): str,
-                vol.Required("device_id"): str,
-                vol.Required("product_id"): str,
                 vol.Optional("access_token", description="Manual token (fallback if login fails)"): str,
             }
         )
 
-
-
-        #return self.async_show_form(step_id="user", data_schema=data_schema, errors=errors)
         return self.async_show_form(
             step_id="user",
             data_schema=data_schema,
@@ -93,7 +99,42 @@ class MSPAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders={
                 "username": "Your MSpa account username or email",
                 "password": "Your MSpa account password",
-                "device_id": "The ID of your MSpa device",
-                "product_id": "The product ID of your MSpa device",
+            },
+        )
+
+    async def async_step_device_selection(self, user_input=None):
+        """Handle device selection when multiple devices are found."""
+        if user_input is not None:
+            device_id = user_input["device"]
+            # Find the selected device
+            selected_device = next((d for d in self.discovered_devices if d["device_id"] == device_id), None)
+            if selected_device:
+                data = {
+                    "username": user_input.get("username", ""),
+                    "password": user_input.get("password", ""),
+                    "device_id": selected_device["device_id"],
+                    "product_id": selected_device["product_id"],
+                    "device_name": selected_device["name"],
+                    "access_token": user_input.get("access_token")
+                }
+                return self.async_create_entry(title=f"MSpa {selected_device['name']}", data=data)
+
+        # Create device selection options
+        device_options = {}
+        for device in self.discovered_devices:
+            status = "Online" if device["is_online"] else "Offline"
+            device_options[device["device_id"]] = f"{device['name']} ({device['product_model']}) - {status}"
+
+        data_schema = vol.Schema(
+            {
+                vol.Required("device"): vol.In(device_options),
+            }
+        )
+
+        return self.async_show_form(
+            step_id="device_selection",
+            data_schema=data_schema,
+            description_placeholders={
+                "device": "Select your MSpa device",
             },
         )
