@@ -47,15 +47,10 @@ class MSpaBubbleLevelSelect(CoordinatorEntity, SelectEntity):
     @property
     def current_option(self) -> str | None:
         """Return the current selected option."""
-        if "bubble_level" in self.coordinator.data and "bubble_state" in self.coordinator.data:
-            bubble_state = self.coordinator.data["bubble_state"]
+        if "bubble_level" in self.coordinator.data:
             bubble_level = self.coordinator.data["bubble_level"]
             
-            # If bubbles are off, don't show any selection
-            if bubble_state == 0:
-                return None
-            
-            # If bubbles are on, show the current level
+            # Always show the last known bubble level regardless of bubble_state
             level_map = {1: "Low", 2: "Medium", 3: "High"}
             return level_map.get(bubble_level)
         return None

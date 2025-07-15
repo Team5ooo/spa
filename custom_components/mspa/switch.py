@@ -96,9 +96,9 @@ class MSpASwitch(CoordinatorEntity, SwitchEntity):
             if self._data_key in ["heater_state", "uvc_state"]:
                 desired_state["filter_state"] = 1
 
-            # Set bubble_level when turning on bubbles
+            # Set bubble_level when turning on bubbles - use current level, default to Medium if not set
             if self._data_key == "bubble_state":
-                bubble_level = self.coordinator.data.get("bubble_level", 1)  # Default to Low if not set
+                bubble_level = self.coordinator.data.get("bubble_level", 2)  # Default to Medium if not set
                 desired_state["bubble_level"] = bubble_level
 
             response = await self._api.send_device_command(desired_state)
