@@ -94,7 +94,8 @@ class MSpANumericSensor(CoordinatorEntity, SensorEntity):
     def state(self):
         """Return the state of the sensor."""
         if self._data_key in self.coordinator.data:
-            celsius_temp = self.coordinator.data[self._data_key]  # Use raw API value
+            # API returns doubled Celsius values, so divide by 2 to get actual Celsius
+            celsius_temp = self.coordinator.data[self._data_key] * 0.5
             
             # Convert to system unit preference
             if self.hass.config.units.temperature_unit == UnitOfTemperature.FAHRENHEIT:

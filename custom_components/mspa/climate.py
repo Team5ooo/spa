@@ -97,7 +97,7 @@ class MSpaClimate(CoordinatorEntity, ClimateEntity):
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         if "water_temperature" in self.coordinator.data:
-            # Apply correction factor (device reports in 0.5°C increments)
+            # API returns doubled Celsius values, so divide by 2 to get actual Celsius
             temp_celsius = self.coordinator.data["water_temperature"] * 0.5
             
             # Convert to Fahrenheit if device is set to Fahrenheit
@@ -110,8 +110,8 @@ class MSpaClimate(CoordinatorEntity, ClimateEntity):
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if "temperature_setting" in self.coordinator.data:
-            # The API expects/returns actual temperature values, not the 0.5 factor
-            temp_celsius = self.coordinator.data["temperature_setting"]
+            # API returns doubled Celsius values, so divide by 2 to get actual Celsius
+            temp_celsius = self.coordinator.data["temperature_setting"] * 0.5
             
             # Convert to Fahrenheit if device is set to Fahrenheit
             if self.coordinator.data.get("temperature_unit", 0) == 1:
@@ -137,20 +137,19 @@ class MSpaClimate(CoordinatorEntity, ClimateEntity):
             return
 
         try:
-            # The MSpa API always expects temperature in Fahrenheit, regardless of display unit
-            # Home Assistant sends temperature in the unit specified by temperature_unit property
-            temp_fahrenheit = temperature
+            # Convert input temperature to Celsius first
+            temp_celsius = temperature
+            if self.temperature_unit == UnitOfTemperature.FAHRENHEIT:
+                temp_celsius = (temperature - 32) * 5/9
             
-            # If HA is sending Celsius (because our temperature_unit is Celsius),
-            # we need to convert to Fahrenheit for the API
-            if self.temperature_unit == UnitOfTemperature.CELSIUS:
-                temp_fahrenheit = temperature * 9/5 + 32
+            # Round to nearest half degree Celsius and ensure within valid range (20-40°C)
+            temp_celsius = round(temp_celsius * 2) / 2
+            temp_celsius = max(20, min(40, temp_celsius))
+            
+            # API expects doubled Celsius values, so multiply by 2
+            api_temp_value = int(temp_celsius * 2)
 
-            # Round to nearest half degree Fahrenheit and ensure within valid range (68-104°F)
-            temp_fahrenheit = round(temp_fahrenheit * 2) / 2
-            temp_fahrenheit = max(68, min(104, temp_fahrenheit))
-
-            desired_state = {"temperature_setting": temp_fahrenheit}
+            desired_state = {"temperature_setting": api_temp_value}
             response = await self._api.send_device_command(desired_state)
             _LOGGER.debug(f"MSpa temperature command response: {response}")
 
