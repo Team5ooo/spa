@@ -8,14 +8,14 @@ A Home Assistant custom integration for MSpa (hot tub/spa) devices. Control and 
 
 ## Features
 
-- **🌡️ Temperature Control**: Full climate entity with temperature setting and HVAC control
+- **🌡️ Temperature Control**: Full climate entity with accurate temperature setting and HVAC control
 - **🌡️ Temperature Monitoring**: Water temperature and target temperature sensors
 - **🔛 Device Control**: Control heater, filter, bubbles, ozone, UVC, and safety lock
-- **📊 Status Sensors**: Binary sensors for all device states
 - **🫧 Bubble Level Control**: Adjustable bubble intensity (Low/Medium/High)
 - **🌡️ Temperature Units**: Toggle between Celsius and Fahrenheit
 - **🔄 Automatic Authentication**: Uses username/password - no manual token required
 - **⚡ Instant Updates**: Immediate state refresh after commands (like mobile app)
+- **🧹 Clean Interface**: No duplicate entities - switches show both control and status
 - **🔐 Secure**: All communication encrypted with proper API authentication
 
 ## Supported Devices
@@ -90,25 +90,20 @@ The integration creates the following entities:
 - `sensor.mspa_target_temperature` - Target temperature setting
 - `sensor.mspa_bubble_level` - Bubble level (Off/Low/Medium/High)
 
-### Switches
-- `switch.mspa_heater` - Heater control
-- `switch.mspa_filter` - Filter control
-- `switch.mspa_bubbles_state` - Bubble on/off control
-- `switch.mspa_ozone` - Ozone control
-- `switch.mspa_uvc` - UVC control
-- `switch.mspa_safety_lock` - Safety lock control
+### Switches (Control & Status)
+- `switch.mspa_heater` - Heater control and status
+- `switch.mspa_filter` - Filter control and status
+- `switch.mspa_bubbles_state` - Bubble control and status
+- `switch.mspa_ozone` - Ozone control and status
+- `switch.mspa_uvc` - UVC control and status
+- `switch.mspa_safety_lock` - Safety lock control and status
 - `switch.mspa_temperature_unit_f` - Temperature unit toggle (°C/°F)
 
 ### Buttons
 - `button.mspa_bubble_level` - Cycle bubble intensity levels (only when bubbles are on)
 
-### Binary Sensors
-- `binary_sensor.mspa_heater` - Heater status
-- `binary_sensor.mspa_filter` - Filter status
-- `binary_sensor.mspa_bubbles` - Bubble status
-- `binary_sensor.mspa_ozone` - Ozone status
-- `binary_sensor.mspa_uvc` - UVC status
-- `binary_sensor.mspa_safety_lock` - Safety lock status
+### Binary Sensors (Read-only Status)
+- `binary_sensor.mspa_jet` - Jet status (read-only)
 
 ## Automation Examples
 

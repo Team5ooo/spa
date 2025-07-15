@@ -29,14 +29,9 @@ async def async_setup_entry(
     coordinator = data["coordinator"]
 
     # Define the binary sensors you want to create
+    # Only include read-only sensors (jet_state is read-only, others are controllable via switches)
     binary_sensors = [
-        MSpABinarySensor(coordinator, "heater_state", "Heater"),
-        MSpABinarySensor(coordinator, "filter_state", "Filter"),
-        MSpABinarySensor(coordinator, "bubble_state", "Bubbles"),
-        MSpABinarySensor(coordinator, "ozone_state", "Ozone"),
-        MSpABinarySensor(coordinator, "uvc_state", "UVC"),
         MSpABinarySensor(coordinator, "jet_state", "Jet"),
-        MSpABinarySensor(coordinator, "safety_lock", "Safety Lock"),
     ]
 
     async_add_entities(binary_sensors)

@@ -63,10 +63,7 @@ class MSpaClimate(CoordinatorEntity, ClimateEntity):
         # HVAC modes
         self._attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
         
-        # Temperature settings
-        self._attr_min_temp = 20  # 20°C / 68°F
-        self._attr_max_temp = 40  # 40°C / 104°F
-        self._attr_target_temperature_step = 0.5  # 0.5°C increments
+        # Temperature settings will be set dynamically based on unit
 
     @property
     def temperature_unit(self) -> str:
@@ -74,6 +71,27 @@ class MSpaClimate(CoordinatorEntity, ClimateEntity):
         # Check if device is set to Fahrenheit (1) or Celsius (0)
         temp_unit = self.coordinator.data.get("temperature_unit", 0)
         return UnitOfTemperature.FAHRENHEIT if temp_unit == 1 else UnitOfTemperature.CELSIUS
+
+    @property
+    def min_temp(self) -> float:
+        """Return the minimum temperature."""
+        if self.temperature_unit == UnitOfTemperature.FAHRENHEIT:
+            return 68.0  # 20°C = 68°F
+        return 20.0  # 20°C
+
+    @property
+    def max_temp(self) -> float:
+        """Return the maximum temperature."""
+        if self.temperature_unit == UnitOfTemperature.FAHRENHEIT:
+            return 104.0  # 40°C = 104°F
+        return 40.0  # 40°C
+
+    @property
+    def target_temperature_step(self) -> float:
+        """Return the supported step of target temperature."""
+        if self.temperature_unit == UnitOfTemperature.FAHRENHEIT:
+            return 1.0  # 1°F increments
+        return 0.5  # 0.5°C increments
 
     @property
     def current_temperature(self) -> float | None:
@@ -119,20 +137,20 @@ class MSpaClimate(CoordinatorEntity, ClimateEntity):
             return
 
         try:
-            # The MSpa API always expects temperature in Celsius, regardless of display unit
+            # The MSpa API always expects temperature in Fahrenheit, regardless of display unit
             # Home Assistant sends temperature in the unit specified by temperature_unit property
-            temp_celsius = temperature
+            temp_fahrenheit = temperature
             
-            # If HA is sending Fahrenheit (because our temperature_unit is Fahrenheit),
-            # we need to convert to Celsius for the API
-            if self.temperature_unit == UnitOfTemperature.FAHRENHEIT:
-                temp_celsius = (temperature - 32) * 5/9
+            # If HA is sending Celsius (because our temperature_unit is Celsius),
+            # we need to convert to Fahrenheit for the API
+            if self.temperature_unit == UnitOfTemperature.CELSIUS:
+                temp_fahrenheit = temperature * 9/5 + 32
 
-            # Round to nearest half degree (0.5°C increments) and ensure within valid range (20-40°C)
-            temp_celsius = round(temp_celsius * 2) / 2
-            temp_celsius = max(20, min(40, temp_celsius))
+            # Round to nearest half degree Fahrenheit and ensure within valid range (68-104°F)
+            temp_fahrenheit = round(temp_fahrenheit * 2) / 2
+            temp_fahrenheit = max(68, min(104, temp_fahrenheit))
 
-            desired_state = {"temperature_setting": temp_celsius}
+            desired_state = {"temperature_setting": temp_fahrenheit}
             response = await self._api.send_device_command(desired_state)
             _LOGGER.debug(f"MSpa temperature command response: {response}")
 
