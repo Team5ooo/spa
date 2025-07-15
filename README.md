@@ -98,7 +98,9 @@ The integration creates the following entities:
 - `switch.mspa_uvc` - UVC control
 - `switch.mspa_safety_lock` - Safety lock control
 - `switch.mspa_temperature_unit_f` - Temperature unit toggle (°C/°F)
-- `switch.mspa_bubble_level_up` - Cycle bubble intensity levels
+
+### Buttons
+- `button.mspa_bubble_level` - Cycle bubble intensity levels (only when bubbles are on)
 
 ### Binary Sensors
 - `binary_sensor.mspa_heater` - Heater status
@@ -140,13 +142,13 @@ automation:
       to: "on"
     action:
       - delay: "00:05:00"  # 5 minutes at current level
-      - service: switch.turn_on
+      - service: button.press
         target:
-          entity_id: switch.mspa_bubble_level_up
+          entity_id: button.mspa_bubble_level
       - delay: "00:05:00"  # 5 minutes at next level
-      - service: switch.turn_on
+      - service: button.press
         target:
-          entity_id: switch.mspa_bubble_level_up
+          entity_id: button.mspa_bubble_level
 ```
 
 ### Notify when temperature reaches target

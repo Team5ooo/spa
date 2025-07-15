@@ -119,15 +119,17 @@ class MSpaClimate(CoordinatorEntity, ClimateEntity):
             return
 
         try:
-            # Convert from Fahrenheit to Celsius if needed
+            # The MSpa API always expects temperature in Celsius, regardless of display unit
+            # Home Assistant sends temperature in the unit specified by temperature_unit property
             temp_celsius = temperature
-            if self.coordinator.data.get("temperature_unit", 0) == 1:
+            
+            # If HA is sending Fahrenheit (because our temperature_unit is Fahrenheit),
+            # we need to convert to Celsius for the API
+            if self.temperature_unit == UnitOfTemperature.FAHRENHEIT:
                 temp_celsius = (temperature - 32) * 5/9
 
-            # Round to nearest degree
+            # Round to nearest degree and ensure within valid range (20-40°C)
             temp_celsius = round(temp_celsius)
-            
-            # Ensure within valid range (20-40°C)
             temp_celsius = max(20, min(40, temp_celsius))
 
             desired_state = {"temperature_setting": temp_celsius}
