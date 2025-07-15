@@ -66,7 +66,7 @@ class MSpaClimate(CoordinatorEntity, ClimateEntity):
         # Temperature settings
         self._attr_min_temp = 20  # 20°C / 68°F
         self._attr_max_temp = 40  # 40°C / 104°F
-        self._attr_target_temperature_step = 1
+        self._attr_target_temperature_step = 0.5  # 0.5°C increments
 
     @property
     def temperature_unit(self) -> str:
@@ -128,8 +128,8 @@ class MSpaClimate(CoordinatorEntity, ClimateEntity):
             if self.temperature_unit == UnitOfTemperature.FAHRENHEIT:
                 temp_celsius = (temperature - 32) * 5/9
 
-            # Round to nearest degree and ensure within valid range (20-40°C)
-            temp_celsius = round(temp_celsius)
+            # Round to nearest half degree (0.5°C increments) and ensure within valid range (20-40°C)
+            temp_celsius = round(temp_celsius * 2) / 2
             temp_celsius = max(20, min(40, temp_celsius))
 
             desired_state = {"temperature_setting": temp_celsius}
