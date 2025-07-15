@@ -74,8 +74,8 @@ class MSPAAPI:
         elif self.api_key:
             headers["authorization"] = f"token {self.api_key}"
         
-        # Generate signature
-        if payload:
+        # Generate signature (always for authenticated requests)
+        if self._access_token or self.api_key:
             headers["sign"] = self._generate_signature(payload, nonce, timestamp)
         
         return headers
