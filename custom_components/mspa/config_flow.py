@@ -30,7 +30,6 @@ class MSPAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             username = user_input["username"]
             password = user_input["password"]
-            access_token = user_input.get("access_token")
 
             # Test authentication and discover devices
             try:
@@ -38,16 +37,12 @@ class MSPAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 api = MSPAAPI(
                     base_url=API_BASE_URL,
                     username=username,
-                    password=password,
-                    access_token=access_token
+                    password=password
                 )
                 
-                # Authenticate first
-                if access_token:
-                    _LOGGER.info("Using manual access token")
-                else:
-                    _LOGGER.info("Attempting login with username/password")
-                    await api.login()
+                # Authenticate with username/password
+                _LOGGER.info("Attempting login with username/password")
+                await api.login()
                 
                 # Discover devices
                 devices = await api.get_user_devices()
@@ -64,8 +59,7 @@ class MSPAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         "password": password,
                         "device_id": device["device_id"],
                         "product_id": device["product_id"],
-                        "device_name": device["name"],
-                        "access_token": access_token
+                        "device_name": device["name"]
                     }
                     return self.async_create_entry(title=f"MSpa {device['name']}", data=data)
                 else:
@@ -88,7 +82,6 @@ class MSPAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             {
                 vol.Required("username"): str,
                 vol.Required("password"): str,
-                vol.Optional("access_token", description="Manual token (fallback if login fails)"): str,
             }
         )
 
@@ -114,8 +107,7 @@ class MSPAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     "password": user_input.get("password", ""),
                     "device_id": selected_device["device_id"],
                     "product_id": selected_device["product_id"],
-                    "device_name": selected_device["name"],
-                    "access_token": user_input.get("access_token")
+                    "device_name": selected_device["name"]
                 }
                 return self.async_create_entry(title=f"MSpa {selected_device['name']}", data=data)
 

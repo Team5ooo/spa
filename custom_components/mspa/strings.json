@@ -12,10 +12,6 @@
           "password": {
             "name": "Password",
             "description": "Your MSpa account password"
-          },
-          "access_token": {
-            "name": "Access Token (Optional)",
-            "description": "Manual access token if login fails"
           }
         }
       },
